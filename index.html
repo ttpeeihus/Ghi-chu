@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheet Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+
+        #data-table th,
+        #data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #data-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        #data-table tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #data-table tbody tr:hover {
+            background-color: #ddd;
+        }
+
+        .input-container {
+            margin-top: 20px;
+        }
+
+        .input-container input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .input-container button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .input-container button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Note</th>
+                <th>Day</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data rows will be added dynamically using JavaScript -->
+        </tbody>
+    </table>
+
+    <div class="input-container">
+        <input type="text" id="noteInput" placeholder="Note">
+        <input type="text" id="dayInput" placeholder="Day">
+        <button onclick="sendData()">Send Data</button>
+    </div>
+
+    <script>
+        function sendData() {
+            var note = document.getElementById('noteInput').value;
+            var day = document.getElementById('dayInput').value;
+
+            if (note && day) {
+                var data = {
+                    column1: note,
+                    column2: day
+                };
+
+                sendDataToGoogleAppsScript(data);
+                alert('Gửi dữ liệu thành công');
+            } else {
+                alert("Please fill in both Note and Day fields.");
+            }
+        }
+
+
+        function sendDataToGoogleAppsScript(data) {
+            var url = 'https://script.google.com/macros/s/AKfycbwvjPc8a6mgJ58qvNY71WLmCC6rcFxOlF-7_O--L8s5j3l3o14Bi1zzgxVP-mEWKgQ/exec';
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log('Data sent successfully:', result);
+                // Refresh table after sending data
+                refreshTable();
+            })
+            .catch(error => {
+                console.error('Error sending data:', error);
+            });
+        }
+
+        function refreshTable() {
+            // Clear existing table rows
+            var tableBody = document.querySelector('#data-table tbody');
+            tableBody.innerHTML = '';
+
+            // Fetch updated data and populate table
+            fetch('https://script.google.com/macros/s/AKfycbwvjPc8a6mgJ58qvNY71WLmCC6rcFxOlF-7_O--L8s5j3l3o14Bi1zzgxVP-mEWKgQ/exec')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(item => {
+                        var row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.column1}</td>
+                            <td>${item.column2}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Initial table population
+        refreshTable();
+    </script>
+</body>
+</html>
